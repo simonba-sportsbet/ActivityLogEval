@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "ActivityLogEval.Client": {
+      "commandName": "Project",
+      "commandLineArgs": "MongoDB @CreateQueyBets.txt",
+      "workingDirectory": "C:\\Projects\\AutoTrader\\RnD\\ActivityLogEval"
+    }
+  }
+}
