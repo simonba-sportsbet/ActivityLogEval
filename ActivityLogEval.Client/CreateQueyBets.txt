@@ -1,0 +1,2 @@
+Reset
+CreateBets TestBets.json

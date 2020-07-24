@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Autofac;
 using Serilog;
 using Serilog.Events;
@@ -10,15 +11,8 @@ namespace ActivityLogEval.Client
 {
     class Program
     {
-        private readonly ILogger _logger;
-        private readonly IContainer _cont;
-        public Program(ILogger logger, IContainer cont)
-        {
-            _logger = logger;
-            _cont = cont;
-        }
-
-        static void Main(string[] args)
+        static Task Main(string[] args) => new Program().Run(args);
+        public Task Run(string[] args)
         {
             var logger = ConfigureLogger();
 
@@ -29,15 +23,18 @@ namespace ActivityLogEval.Client
                 logger.Error("No Parameters");
                 Console.WriteLine("Usage - Environment, Test [, TestParams, ...]");
                 Console.WriteLine("Environments : " + string.Join(",", _envEnvConfig.Keys));
-                Console.WriteLine("Test/Cmds : " + string.Join(",", TestTypes.Select(x => TestName(x.Name))));
-                return;
+                Console.WriteLine("Test/Cmds : " + string.Join(",", _testToTypeMap.Keys));
+                return Task.CompletedTask;
             }
 
             var cont = ConfigureIoc(logger, args[0]);
             if (cont == null)
-                return;
+                return Task.CompletedTask;
 
-            new Program(logger, cont).Run(args[1..]);
+            if (args[1].StartsWith('@'))
+                return RunScript(logger, cont, args[1][1..]);
+            else
+                return RunTest(logger, cont, args[1..]);
         }
 
         private const string _logTemplate = @"{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3} - {Message:lj}{NewLine}{Exception}";
@@ -54,13 +51,21 @@ namespace ActivityLogEval.Client
             { "mongodb", b => b.RegisterModule<MongoDb.ConfigModule>() }
         };
 
-        private static IEnumerable<Type> TestTypes => typeof(Program).Assembly.GetTypes().Where(x => x.IsClass && typeof(ITest).IsAssignableFrom(x));
-        private static string TestName(string typeName) => typeName.EndsWith("Test") ? typeName[0..^4] : typeName;
+        private static string TestName(string typeName) => 
+            typeName.EndsWith("Test") ? typeName[0..^4] 
+            : typeName.EndsWith("Cmd") ? typeName[0..^3]
+            : typeName;
 
-        private static IContainer ConfigureIoc(ILogger logger, string env)
+        private static readonly IReadOnlyDictionary<string, Type> _testToTypeMap =
+            typeof(Program).Assembly.GetTypes()
+                .Where(x => x.IsClass && typeof(ITest).IsAssignableFrom(x))
+                .ToDictionary(x => TestName(x.Name), x => x, StringComparer.OrdinalIgnoreCase);
+
+        private static IContainer? ConfigureIoc(ILogger logger, string env)
         {
             var builder = new ContainerBuilder();
             builder.RegisterInstance(logger);
+            builder.RegisterModule<ConfigModule>();
 
             // Environments
             if (_envEnvConfig.TryGetValue(env, out var envConfig))
@@ -72,25 +77,17 @@ namespace ActivityLogEval.Client
             }
 
             // Tests
-            foreach(var t in TestTypes)
-                builder.RegisterType(t).As<ITest>().Named(TestName(t.Name), typeof(ITest));
+            foreach (var t in _testToTypeMap.Values)
+                builder.RegisterType(t);
 
             return builder.Build();
         }
 
-        public void Run(string[] args)
-        {
-            if (args[0].StartsWith('@'))
-                RunScript(args[0][1..]);
-            else
-                RunTest(args);
-        }
-
-        private void RunScript(string scriptFile)
+        private async Task RunScript(ILogger logger, IContainer cont, string scriptFile)
         {
             if (!File.Exists(scriptFile))
             {
-                _logger.Error("Can't find script file: {ScriptFile}", scriptFile);
+                logger.Error("Can't find script file: {ScriptFile}", scriptFile);
                 return;
             }
 
@@ -99,18 +96,25 @@ namespace ActivityLogEval.Client
                 if (string.IsNullOrWhiteSpace(cmd) || cmd.StartsWith('#'))
                     continue;
 
-                RunTest(cmd.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+                await RunTest(logger, cont, cmd.Split(' ', StringSplitOptions.RemoveEmptyEntries));
             }
         }
-        private void RunTest(string[] cmd)
+
+        private async Task RunTest(ILogger logger, IContainer cont, string[] args)
         {
-            _logger.Information("Running Cmd : {Command}", cmd[0]);
+            logger.Information("Running Cmd : {Command}", args[0]);
 
-            using var nc = _cont.BeginLifetimeScope();
+            if (!_testToTypeMap.TryGetValue(args[0], out var testType))
+            {
+                logger.Error("Test not configured : {TestName]", args[0]);
+                return;
+            }
 
-            var test = nc.ResolveNamed<ITest>(cmd[0]);
+            using var nc = cont.BeginLifetimeScope();
 
-            test.Run(cmd[1..]);
+            var test = (ITest)nc.Resolve(testType);
+
+            await test.Run(args[1..]);
         }
     }
 }

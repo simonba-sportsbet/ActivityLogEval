@@ -1,22 +1,49 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.IO;
+using System.Threading.Tasks;
+using System.Text.Json;
+using ActivityLogEval.Abstractions;
 using Serilog;
 
 namespace ActivityLogEval.Client
 {
     class CreateBets : ITest
     {
+        private readonly IRepo _repo;
         private readonly ILogger _logger;
 
-        public CreateBets(ILogger logger)
+        public CreateBets(
+            IRepo repo, 
+            ILogger logger)
         {
-            _logger = logger;
+            _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger)); 
         }
 
-        public void Run(string[] args)
+        public async Task Run(string[] args)
         {
-            _logger.Information("Creating Bets");
+            if (args.Length < 1)
+            {
+                _logger.Error("Test Args: <FileName>");
+                return;
+            }
+
+            var testFileName = args[0];
+
+            if (!File.Exists(testFileName))
+            {
+                _logger.Error("Test FileName doesn't exist - {TestFileName}", testFileName);
+                return;
+            }
+
+
+            _logger.Information("Creating Bets from {TestFileName}", testFileName);
+
+            Bet[] bets;
+            using (var fs = File.OpenRead(testFileName))
+                bets = await JsonSerializer.DeserializeAsync<Bet[]>(fs);
+
+            await _repo.InsertBetsAsync(bets);
         }
     }
 }

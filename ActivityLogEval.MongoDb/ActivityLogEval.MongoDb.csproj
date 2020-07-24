@@ -1,11 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+      <TargetFramework>netcoreapp3.1</TargetFramework>
+      <nullable>enable</nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Autofac" Version="5.2.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.10.4" />
+    <PackageReference Include="Serilog" Version="2.9.0" />
   </ItemGroup>
 
   <ItemGroup>

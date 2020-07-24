@@ -10,9 +10,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActivityLogEval.MongoDb", "ActivityLogEval.MongoDb\ActivityLogEval.MongoDb.csproj", "{71639E0A-36FB-4F18-A36A-5A3E8325880D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{BAAFD576-76B5-48D0-B83D-C41DB6E8B56B}"
-	ProjectSection(SolutionItems) = preProject
-		CreateQueyBets.txt = CreateQueyBets.txt
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
