@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace ActivityLogEval.Abstractions
 {
-    public class Selection
+    public interface ISelection
     {
         public long? EventTypeId { get; set; }
         public long? EventId { get; set; }
@@ -13,18 +13,19 @@ namespace ActivityLogEval.Abstractions
         public long? SelectionId { get; set; }
         public DateTime? EventDate { get; set; }
     }
-    public class Leg
+    public interface ILeg
     {
-        public Selection Selection { get; set; }
+        public ISelection Selection { get; set; }
         public decimal DecimalPrice { get; set; }
         public float? Handicap { get; set; }
     }
 
-    public class Bet
+    public interface IBet
     {
         public string BetId { get; set; } 
         public DateTimeOffset Timestamp { get; set; }
 
-        public IList<Leg> Legs { get; set; }
+        public IReadOnlyCollection<ILeg> Legs { get; }
+        public void AddLeg(ILeg leg);
     }
 }

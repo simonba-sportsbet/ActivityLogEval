@@ -1,6 +1,7 @@
 ﻿using System;
 using Autofac;
 using ActivityLogEval.Abstractions;
+using MongoDB.Driver;
 
 namespace ActivityLogEval.MongoDb
 {
@@ -9,7 +10,9 @@ namespace ActivityLogEval.MongoDb
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<DbConnectionFactory>().As<IDbConnectionFactory>().SingleInstance();
-            builder.RegisterType<MongoDbRepo>().As<IRepo>();
+            builder.Register(ctx => ctx.Resolve<IDbConnectionFactory>().GetDatabase());
+
+            builder.RegisterType<BetRepo>().As<IBetRepo>();
         }
     }
 }

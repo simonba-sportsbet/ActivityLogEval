@@ -1,29 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Text.Json;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using Serilog;
 using ActivityLogEval.Abstractions;
-using System.Threading.Tasks;
 
 namespace ActivityLogEval.MongoDb
 {
-    public class MongoDbRepo : IRepo
+    public class BetRepo : IBetRepo
     {
-        private readonly IDbConnectionFactory _dbConnectionFactory;
+        private readonly Lazy<IMongoDatabase> _db;
         private readonly ILogger _logger;
 
-        private readonly Lazy<IMongoDatabase> _db;
-
-        public MongoDbRepo(
-            IDbConnectionFactory dbConnectionFactory,
+        public BetRepo(
+            Lazy<IMongoDatabase> db,
             ILogger logger)
         {
-            _dbConnectionFactory = dbConnectionFactory;
+            _db = db;
             _logger = logger;
-
-            _db = new Lazy<IMongoDatabase>(() => _dbConnectionFactory.GetDatabase());
         }
 
         public const string BetsCollectionName = "bets";
@@ -35,27 +32,37 @@ namespace ActivityLogEval.MongoDb
 
         private IMongoCollection<Bet> Bets => _db.Value.GetCollection<Bet>(BetsCollectionName);
 
-        public Task InsertBetAsync(Bet bet)
+        public Task InsertBetAsync(IBet bet)
         {
             _logger.Debug("Create Bet - BetId:{BetId}", bet?.BetId);
 
-            if (bet == null)
+            if (bet == null || !(bet is Bet rec))
                 throw new ArgumentNullException(nameof(bet));
 
-            return Bets.InsertOneAsync(bet);
+            return Bets.InsertOneAsync(rec);
         }
 
-        public Task InsertBetsAsync(IEnumerable<Bet> bets)
+        public Task InsertBetsAsync(IEnumerable<IBet> bets)
         {
             if (bets == null)
                 throw new ArgumentNullException(nameof(bets));
 
-            return Bets.InsertManyAsync(bets);
+            var recs = bets.Cast<Bet>();
+
+            return Bets.InsertManyAsync(recs);
         }
 
-        public IEnumerable<Bet> QueryBetById(params string[] betId)
+        public IEnumerable<IBet> GetAllBets() => Bets.AsQueryable();
+
+        public IEnumerable<IBet> QueryBetById(params string[] betId)
         {
             return Bets.AsQueryable().Where(x => betId.Contains(x.BetId));
         }
+
+        public IBet CreateNewBet() => new Bet();
+        public ILeg CreateNewLeg() => new Leg();
+        public ISelection CreateNewSelection() => new Selection();
+
+        public IBet[] DeserializeBet(string jsonStream) => JsonSerializer.Deserialize<Bet[]>(jsonStream);
     }
 }

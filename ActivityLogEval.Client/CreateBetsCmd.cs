@@ -1,19 +1,18 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using System.Text.Json;
 using ActivityLogEval.Abstractions;
 using Serilog;
 
 namespace ActivityLogEval.Client
 {
-    class CreateBets : ITest
+    class CreateBets : ICmd
     {
-        private readonly IRepo _repo;
+        private readonly IBetRepo _repo;
         private readonly ILogger _logger;
 
         public CreateBets(
-            IRepo repo, 
+            IBetRepo repo, 
             ILogger logger)
         {
             _repo = repo ?? throw new ArgumentNullException(nameof(repo));
@@ -36,12 +35,10 @@ namespace ActivityLogEval.Client
                 return;
             }
 
-
             _logger.Information("Creating Bets from {TestFileName}", testFileName);
 
-            Bet[] bets;
-            using (var fs = File.OpenRead(testFileName))
-                bets = await JsonSerializer.DeserializeAsync<Bet[]>(fs);
+            var json = File.ReadAllText(testFileName);
+            var bets = _repo.DeserializeBet(json);
 
             await _repo.InsertBetsAsync(bets);
         }

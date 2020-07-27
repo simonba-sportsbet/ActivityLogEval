@@ -7,6 +7,8 @@ using Autofac;
 using Serilog;
 using Serilog.Events;
 
+#pragma warning disable CA1031 // Do not catch general exception types
+
 namespace ActivityLogEval.Client
 {
     class Program
@@ -21,9 +23,9 @@ namespace ActivityLogEval.Client
             if (args.Length < 2)
             {
                 logger.Error("No Parameters");
-                Console.WriteLine("Usage - Environment, Test [, TestParams, ...]");
+                Console.WriteLine("Usage - Environment, Cmd [, CmdArgs, ...]");
                 Console.WriteLine("Environments : " + string.Join(",", _envEnvConfig.Keys));
-                Console.WriteLine("Test/Cmds : " + string.Join(",", _testToTypeMap.Keys));
+                Console.WriteLine("Cmds : " + string.Join(",", _cmdToTypeMap.Keys));
                 return Task.CompletedTask;
             }
 
@@ -31,10 +33,7 @@ namespace ActivityLogEval.Client
             if (cont == null)
                 return Task.CompletedTask;
 
-            if (args[1].StartsWith('@'))
-                return RunScript(logger, cont, args[1][1..]);
-            else
-                return RunTest(logger, cont, args[1..]);
+            return RunCmd(logger, cont, args[1..]);
         }
 
         private const string _logTemplate = @"{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3} - {Message:lj}{NewLine}{Exception}";
@@ -51,15 +50,12 @@ namespace ActivityLogEval.Client
             { "mongodb", b => b.RegisterModule<MongoDb.ConfigModule>() }
         };
 
-        private static string TestName(string typeName) => 
-            typeName.EndsWith("Test") ? typeName[0..^4] 
-            : typeName.EndsWith("Cmd") ? typeName[0..^3]
-            : typeName;
+        private static string CmdName(string typeName) =>  typeName.EndsWith("Cmd") ? typeName[0..^3] : typeName;
 
-        private static readonly IReadOnlyDictionary<string, Type> _testToTypeMap =
+        private static readonly IReadOnlyDictionary<string, Type> _cmdToTypeMap =
             typeof(Program).Assembly.GetTypes()
-                .Where(x => x.IsClass && typeof(ITest).IsAssignableFrom(x))
-                .ToDictionary(x => TestName(x.Name), x => x, StringComparer.OrdinalIgnoreCase);
+                .Where(x => x.IsClass && typeof(ICmd).IsAssignableFrom(x))
+                .ToDictionary(x => CmdName(x.Name), x => x, StringComparer.OrdinalIgnoreCase);
 
         private static IContainer? ConfigureIoc(ILogger logger, string env)
         {
@@ -76,11 +72,42 @@ namespace ActivityLogEval.Client
                 return null;
             }
 
-            // Tests
-            foreach (var t in _testToTypeMap.Values)
+            // Commands
+            foreach (var t in _cmdToTypeMap.Values)
                 builder.RegisterType(t);
 
             return builder.Build();
+        }
+
+        private async Task RunCmd(ILogger logger, IContainer cont, string[] args)
+        {
+            logger.Information("Running Cmd : {Command}", args[0]);
+
+
+            if (args[0].StartsWith("@"))
+                await RunScript(logger, cont, args[0][1..]);
+            else
+            {
+
+                if (!_cmdToTypeMap.TryGetValue(args[0], out var cmdType))
+                {
+                    logger.Error("Command not configured : {CmdName]", args[0]);
+                    return;
+                }
+
+                using var nc = cont.BeginLifetimeScope();
+
+                var cmd = (ICmd)nc.Resolve(cmdType);
+
+                try
+                {
+                    await cmd.Run(args[1..]);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "Doh!");
+                }
+            }
         }
 
         private async Task RunScript(ILogger logger, IContainer cont, string scriptFile)
@@ -91,30 +118,13 @@ namespace ActivityLogEval.Client
                 return;
             }
 
-            foreach(var cmd in File.ReadAllLines(scriptFile))
+            foreach (var cmd in File.ReadAllLines(scriptFile))
             {
                 if (string.IsNullOrWhiteSpace(cmd) || cmd.StartsWith('#'))
                     continue;
 
-                await RunTest(logger, cont, cmd.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+                await RunCmd(logger, cont, cmd.Split(' ', StringSplitOptions.RemoveEmptyEntries));
             }
-        }
-
-        private async Task RunTest(ILogger logger, IContainer cont, string[] args)
-        {
-            logger.Information("Running Cmd : {Command}", args[0]);
-
-            if (!_testToTypeMap.TryGetValue(args[0], out var testType))
-            {
-                logger.Error("Test not configured : {TestName]", args[0]);
-                return;
-            }
-
-            using var nc = cont.BeginLifetimeScope();
-
-            var test = (ITest)nc.Resolve(testType);
-
-            await test.Run(args[1..]);
         }
     }
 }

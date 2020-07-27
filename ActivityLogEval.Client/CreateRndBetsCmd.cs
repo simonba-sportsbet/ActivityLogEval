@@ -6,15 +6,15 @@ using Serilog;
 
 namespace ActivityLogEval.Client
 {
-    class CreateRndBets : ITest
+    class CreateRndBets : ICmd
     {
         private readonly IBetGenerator _betGenerator;
-        private readonly IRepo _repo;
+        private readonly IBetRepo _repo;
         private readonly ILogger _logger;
 
         public CreateRndBets(
             IBetGenerator betGenerator,
-            IRepo repo, 
+            IBetRepo repo, 
             ILogger logger)
         {
             _betGenerator = betGenerator;
@@ -32,6 +32,8 @@ namespace ActivityLogEval.Client
 
             foreach (var (idx, bet) in Enumerable.Range(1, betCount).Select(idx => (idx, _betGenerator.CreateRandomBet())))
             {
+                _logger.Verbose(bet.ToJson());
+
                 _logger.Debug("New bet - {count}", idx);
                 await _repo.InsertBetAsync(bet);
 

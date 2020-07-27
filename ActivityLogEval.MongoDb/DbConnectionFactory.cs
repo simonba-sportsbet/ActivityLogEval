@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 
 namespace ActivityLogEval.MongoDb
@@ -19,6 +20,10 @@ namespace ActivityLogEval.MongoDb
 
         private IMongoDatabase ConnectDatabase()
         {
+            //BsonClassMap.RegisterClassMap<Selection>();
+            //BsonClassMap.RegisterClassMap<Leg>();
+            //BsonClassMap.RegisterClassMap<Bet>();
+
             _client = _client ??= new MongoClient("mongodb://localhost:27017");
             return _client.GetDatabase("activity-log");
         }

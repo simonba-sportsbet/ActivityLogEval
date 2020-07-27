@@ -1,0 +1,87 @@
+[
+    {
+        "BetId": "T1-B01",
+        "Timestamp": "2020-07-27T11:01:00.00+10:00",
+        "Legs": [
+            {
+                "Selection": {
+                    "EventTypeId": 10,
+                    "EventId": 149,
+                    "MarketId": 39,
+                    "SelectionId": 2,
+                    "EventDate": "2020-09-23"
+                },
+                "DecimalPrice": 586,
+                "Handicap": 0.8
+            }
+        ]
+    },
+    {
+        "BetId": "T1-B02",
+        "Timestamp": "2020-07-27T11:02:00.00+10:00",
+        "Legs": [
+            {
+                "Selection": {
+                    "EventTypeId": 10,
+                    "EventId": 149,
+                    "MarketId": 39,
+                    "SelectionId": 2,
+                    "EventDate": "2020-09-23"
+                },
+                "DecimalPrice": 752,
+                "Handicap": 0.8
+            }
+        ]
+    },
+    {
+        "BetId": "T1-B03",
+        "Timestamp": "2020-07-27T11:03:00.00+10:00",
+        "Legs": [
+            {
+                "Selection": {
+                    "EventTypeId": 10,
+                    "EventId": 149,
+                    "MarketId": 39,
+                    "SelectionId": 2,
+                    "EventDate": "2020-09-23"
+                },
+                "DecimalPrice": 5328,
+                "Handicap": 0.3
+            }
+        ]
+    },
+    {
+        "BetId": "T1-B04",
+        "Timestamp": "2020-07-27T11:03:00.00+10:00",
+        "Legs": [
+            {
+                "Selection": {
+                    "EventTypeId": 10,
+                    "EventId": 149,
+                    "MarketId": 39,
+                    "SelectionId": 2,
+                    "EventDate": "2020-09-23"
+                },
+                "DecimalPrice": 230,
+                "Handicap": 0.3
+            }
+        ]
+    },
+    {
+        "BetId": "T1-B05",
+        "Timestamp": "2020-07-27T11:03:00.00+10:00",
+        "Legs": [
+            {
+                "Selection": {
+                    "EventTypeId": 10,
+                    "EventId": 149,
+                    "MarketId": 39,
+                    "SelectionId": 2,
+                    "EventDate": "2020-09-23"
+                },
+                "DecimalPrice": 140,
+                "Handicap": 0.3
+            }
+        ]
+    }
+]

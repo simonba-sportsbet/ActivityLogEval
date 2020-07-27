@@ -5,13 +5,13 @@ using Serilog;
 
 namespace ActivityLogEval.Client
 {
-    public class ResetCmd : ITest
+    public class ResetCmd : ICmd
     {
-        private readonly IRepo _repo;
+        private readonly IBetRepo _repo;
         private readonly ILogger _logger;
 
         public ResetCmd(
-            IRepo repo,
+            IBetRepo repo,
             ILogger logger)
         {
             _repo = repo ?? throw new ArgumentNullException(nameof(repo));

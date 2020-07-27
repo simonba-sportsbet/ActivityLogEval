@@ -2,7 +2,7 @@
 
 namespace ActivityLogEval.Client
 {
-    public interface ITest
+    public interface ICmd
     {
         Task Run(string[] args);
     }
