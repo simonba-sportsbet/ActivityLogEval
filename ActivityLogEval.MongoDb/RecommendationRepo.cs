@@ -57,6 +57,16 @@ namespace ActivityLogEval.MongoDb
             return Recommendations.AsQueryable().Where(x => recId.Contains(x.RecommendationId));
         }
 
+        public IEnumerable<IBet> QueryBetsForRecommendationId(string recId)
+        {
+            var rec = Recommendations.AsQueryable().FirstOrDefault(x => x.RecommendationId == recId);
+
+            if (rec == null)
+                return Enumerable.Empty<IBet>();
+
+            return _db.Value.GetCollection<Bet>(BetRepo.BetsCollectionName).AsQueryable().Where(x => rec.InputBetIds.Contains(x.BetId));
+        }
+
         public IRecommendation CreateNewRecommendation() => new Recommendation();
 
         public IRecommendation[] DeserializeRecommendation(string jsonStream)

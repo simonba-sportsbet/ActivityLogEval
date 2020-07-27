@@ -14,6 +14,9 @@ namespace ActivityLogEval.Abstractions
         IEnumerable<IRecommendation> GetAllRecommendations();
         IEnumerable<IRecommendation> QueryRecommendationById(params string[] recIds);
 
+        IEnumerable<IBet> QueryBetsForRecommendationId(string recId);
+
+
         IRecommendation CreateNewRecommendation();
 
         IRecommendation[] DeserializeRecommendation(string jsonStream);

@@ -6,3 +6,5 @@ CreateRecommendations TestRecommendation.json
 List recs
 
 List Bets T1-B01 T1-B03 T1-B05
+
+ListRecBets T1-R01
