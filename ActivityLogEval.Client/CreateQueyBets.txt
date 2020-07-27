@@ -1,4 +1,8 @@
 Reset
-#CreateRndBets 3
 CreateBets TestBets.json
+List bets
+
+CreateRecommendations TestRecommendation.json
+List recs
+
 List Bets T1-B01 T1-B03 T1-B05

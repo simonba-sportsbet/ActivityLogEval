@@ -10,6 +10,8 @@ namespace ActivityLogEval.MongoDb
         [BsonId]
         public string RecommendationId { get; set; } = string.Empty;
 
+        public DateTimeOffset Timestamp { get; set; }
+
         public long EventId { get; set; }
 
         public long MarketId { get; set; }

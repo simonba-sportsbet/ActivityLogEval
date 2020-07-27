@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Autofac;
 
@@ -13,7 +14,15 @@ namespace ActivityLogEval.Client
                 .Select(DefaultConvention)
                 .Where(x => x.intf != null))
             {
+                Debug.WriteLine($" {service.Name} as {intf.Name}");
                 builder.RegisterType(service).As(intf);
+            }
+
+            foreach(var service in ThisAssembly.GetTypes()
+                .Where(x => x.IsClass && typeof(ICmd).IsAssignableFrom(x)))
+            {
+                Debug.WriteLine($" {service.Name} as ICmd");
+                builder.RegisterType(service);
             }
         }
 

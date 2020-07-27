@@ -24,7 +24,6 @@ namespace ActivityLogEval.Abstractions
     {
         public string BetId { get; set; } 
         public DateTimeOffset Timestamp { get; set; }
-
         public IReadOnlyCollection<ILeg> Legs { get; }
         public void AddLeg(ILeg leg);
     }

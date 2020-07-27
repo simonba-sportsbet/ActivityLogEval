@@ -1,0 +1,19 @@
+[
+    {
+        "RecommendationId": "T1-R01",
+        "Timestamp": "2020-07-27T11:01:00.00+10:00",
+        "EventId": 149,
+        "MarketId": 39,
+        "SelectionId": 2,
+        "MarketHandicap": 0.8,
+        "SelectionProbability": 0.8,
+        "Prediction": 0.5,
+        "ThresholdBreached": 1,
+        "SelectionChangeRecommendation": "NoChange",
+        "InputBetIds": [
+            "T1-B03",
+            "T1-B04",
+            "T1-B05"
+        ]
+    }
+]

@@ -25,10 +25,7 @@ namespace ActivityLogEval.MongoDb
 
         public const string BetsCollectionName = "bets";
 
-        public async Task ResetAsync()
-        {
-            await _db.Value.DropCollectionAsync(BetsCollectionName);
-        }
+        public Task ResetAsync() => _db.Value.DropCollectionAsync(BetsCollectionName);
 
         private IMongoCollection<Bet> Bets => _db.Value.GetCollection<Bet>(BetsCollectionName);
 

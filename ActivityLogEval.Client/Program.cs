@@ -72,17 +72,12 @@ namespace ActivityLogEval.Client
                 return null;
             }
 
-            // Commands
-            foreach (var t in _cmdToTypeMap.Values)
-                builder.RegisterType(t);
-
             return builder.Build();
         }
 
         private async Task RunCmd(ILogger logger, IContainer cont, string[] args)
         {
             logger.Information("Running Cmd : {Command}", args[0]);
-
 
             if (args[0].StartsWith("@"))
                 await RunScript(logger, cont, args[0][1..]);
@@ -95,12 +90,12 @@ namespace ActivityLogEval.Client
                     return;
                 }
 
-                using var nc = cont.BeginLifetimeScope();
-
-                var cmd = (ICmd)nc.Resolve(cmdType);
-
                 try
                 {
+                    using var nc = cont.BeginLifetimeScope();
+
+                    var cmd = (ICmd)nc.Resolve(cmdType);
+
                     await cmd.Run(args[1..]);
                 }
                 catch (Exception ex)

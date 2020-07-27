@@ -13,6 +13,7 @@ namespace ActivityLogEval.MongoDb
             builder.Register(ctx => ctx.Resolve<IDbConnectionFactory>().GetDatabase());
 
             builder.RegisterType<BetRepo>().As<IBetRepo>();
+            builder.RegisterType<RecommendationRepo>().As<IRecommendationRepo>();
         }
     }
 }

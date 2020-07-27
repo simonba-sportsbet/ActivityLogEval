@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using Serilog;
@@ -23,44 +24,47 @@ namespace ActivityLogEval.MongoDb
             _logger = logger;
         }
 
-        public const string RecommendationsCollectionName = "bets";
+        public const string RecommendationsCollectionName = "recommendations";
 
-        public async Task ResetAsync()
-        {
-            await _db.Value.DropCollectionAsync(RecommendationsCollectionName);
-        }
+        public Task ResetAsync() => _db.Value.DropCollectionAsync(RecommendationsCollectionName);
 
         private IMongoCollection<Recommendation> Recommendations => _db.Value.GetCollection<Recommendation>(RecommendationsCollectionName);
 
-        public Task InsertRecommendationAsync(IRecommendation bet)
+        public Task InsertRecommendationAsync(IRecommendation recommendation)
         {
-            _logger.Debug("Create Recommendation - RecommendationId:{RecommendationId}", bet?.RecommendationId);
+            _logger.Debug("Create Recommendation - RecommendationId:{RecommendationId}", recommendation?.RecommendationId);
 
-            if (bet == null || !(bet is Recommendation rec))
-                throw new ArgumentNullException(nameof(bet));
+            if (recommendation == null || !(recommendation is Recommendation rec))
+                throw new ArgumentException(nameof(recommendation));
 
             return Recommendations.InsertOneAsync(rec);
         }
 
-        public Task InsertRecommendationsAsync(IEnumerable<IRecommendation> bets)
+        public Task InsertRecommendationsAsync(IEnumerable<IRecommendation> recommendations)
         {
-            if (bets == null)
-                throw new ArgumentNullException(nameof(bets));
+            if (recommendations == null)
+                throw new ArgumentNullException(nameof(recommendations));
 
-            var recs = bets.Cast<Recommendation>();
+            var recs = recommendations.Cast<Recommendation>();
 
             return Recommendations.InsertManyAsync(recs);
         }
 
         public IEnumerable<IRecommendation> GetAllRecommendations() => Recommendations.AsQueryable();
 
-        public IEnumerable<IRecommendation> QueryRecommendationById(params string[] betId)
+        public IEnumerable<IRecommendation> QueryRecommendationById(params string[] recId)
         {
-            return Recommendations.AsQueryable().Where(x => betId.Contains(x.RecommendationId));
+            return Recommendations.AsQueryable().Where(x => recId.Contains(x.RecommendationId));
         }
 
         public IRecommendation CreateNewRecommendation() => new Recommendation();
 
-        public IRecommendation[] DeserializeRecommendation(string jsonStream) => JsonSerializer.Deserialize<Recommendation[]>(jsonStream);
+        public IRecommendation[] DeserializeRecommendation(string jsonStream)
+        {
+            var options = new JsonSerializerOptions { };
+            options.Converters.Add(new JsonStringEnumConverter());
+
+            return JsonSerializer.Deserialize<Recommendation[]>(jsonStream, options);
+        }
     }
 }

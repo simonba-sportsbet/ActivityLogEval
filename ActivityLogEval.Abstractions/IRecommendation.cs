@@ -13,6 +13,9 @@ namespace ActivityLogEval.Abstractions
     public interface IRecommendation
     {
         public string RecommendationId { get; set; }
+
+        public DateTimeOffset Timestamp { get; set; }
+
         public long EventId { get; set; }
 
         public long MarketId { get; set; }

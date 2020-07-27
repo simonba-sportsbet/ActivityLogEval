@@ -8,14 +8,17 @@ namespace ActivityLogEval.Client
 {
     public class ListCmd : ICmd
     {
-        private readonly IBetRepo _repo;
+        private readonly Lazy<IBetRepo> _betRepo;
+        private readonly Lazy<IRecommendationRepo> _recRepo;
         private readonly ILogger _logger;
 
         public ListCmd(
-            IBetRepo repo,
+            Lazy<IBetRepo> betRepo,
+            Lazy<IRecommendationRepo> recRepo,
             ILogger logger)
         {
-            _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+            _betRepo = betRepo ?? throw new ArgumentNullException(nameof(betRepo));
+            _recRepo = recRepo ?? throw new ArgumentNullException(nameof(recRepo));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -27,6 +30,10 @@ namespace ActivityLogEval.Client
             {
                 case "bets":
                     ListBets(args[1..]);
+                    break;
+                case "recs":
+                case "recommendations":
+                    ListRecommendations(args[1..]);
                     break;
                 default:
                     _logger.Error("Unknown collection - {coln}", coln);
@@ -41,13 +48,27 @@ namespace ActivityLogEval.Client
             IEnumerable<IBet> bets;
 
             if (args.Length == 0)
-                bets = _repo.GetAllBets();
+                bets = _betRepo.Value.GetAllBets();
             else
-                bets = _repo.QueryBetById(args);
+                bets = _betRepo.Value.QueryBetById(args);
 
             var betsJson = bets.ToJson();
 
             _logger.Information(betsJson);
+        }
+
+        public void ListRecommendations(string[] args)
+        {
+            IEnumerable<IRecommendation> recs;
+
+            if (args.Length == 0)
+                recs = _recRepo.Value.GetAllRecommendations();
+            else
+                recs = _recRepo.Value.QueryRecommendationById(args);
+
+            var recsJson = recs.ToJson();
+
+            _logger.Information(recsJson);
         }
     }
 }
